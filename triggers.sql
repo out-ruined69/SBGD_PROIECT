@@ -1,0 +1,47 @@
+--Am facut un trigger care nu permite inserarea in tabela oras in zilele de vara sau zilele de 13
+CREATE OR REPLACE TRIGGER CERINTA10
+ BEFORE INSERT OR UPDATE OR DELETE ON ORAS
+BEGIN
+ IF(TO_CHAR(SYSDATE,'DD') LIKE '13' OR TO_CHAR(SYSDATE,'MM') LIKE '07' OR TO_CHAR(SYSDATE,'MM')
+LIKE '08' OR TO_CHAR(SYSDATE,'MM') LIKE '06') THEN
+ RAISE_APPLICATION_ERROR(-20001, 'Zi cu ghinion, nu se lucreaza!');
+ END IF;
+END;
+
+
+--Cerinta 11
+--Am creat un trigger care nu permite scaderea salariului
+CREATE OR REPLACE TRIGGER CERINTA11
+ AFTER UPDATE OF SALARIU ON ANGAJAT
+ FOR EACH ROW
+BEGIN
+ IF(:NEW.salariu < :OLD.salariu) THEN
+ RAISE_APPLICATION_ERROR (-20001, 'Salariul nu poate fi mai mic decat cel vechi!');
+ END IF;
+END;
+/
+UPDATE ANGAJAT
+SET SALARIU = 1
+WHERE id_angajat=1;
+DROP TRIGGER CERINTA11
+
+--Cerinta 12
+CREATE TABLE utiliz(
+ nume_utilizator VARCHAR2(255),
+ nume_bd VARCHAR(255),
+ eveniment VARCHAR2(255),
+ nume_target VARCHAR(255),
+ data DATE
+);
+CREATE OR REPLACE TRIGGER CERINTA12
+ AFTER CREATE OR DROP OR ALTER ON SCHEMA
+BEGIN
+ INSERT INTO utiliz
+ values(SYS.LOGIN_USER, SYS.DATABASE_NAME,SYS.SYSEVENT,SYS.DICTIONARY_OBJ_NAME,
+SYSDATE);
+END;
+/
+CREATE TABLE tabela_temp(ind NUMBER(4));
+ALTER TABLE tabela_temp ADD(nume VARCHAR2(20));
+SELECT * FROM UTILIZ;
+DROP TRIGGER CERINTA12;
